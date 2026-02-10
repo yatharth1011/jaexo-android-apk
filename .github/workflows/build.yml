@@ -5,12 +5,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
+          
+      - name: Auto-Migrate Android to V2
+        run: |
+          # --- 1. Fix AndroidManifest.xml ---
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          echo "Patching Manifest: $MANIFEST"
+          
+          # Remove the old V1 application name causing conflicts
+          sed -i 's/android:name="io.flutter.app.FlutterApplication"//g' $MANIFEST
+          
+          # Inject the V2 meta-data required by plugins
+          sed -i 's/<\/application>/<meta-data android:name="flutterEmbedding" android:value="2" \/><\/application>/' $MANIFEST
+          
+          # --- 2. Fix MainActivity (Java or Kotlin) ---
+          # Find the main activity file automatically
+          MAIN_ACTIVITY=$(find android/app/src/main -name "MainActivity.*")
+          echo "Found MainActivity at: $MAIN_ACTIVITY"
+          
+          if [[ $MAIN_ACTIVITY == *.java ]]; then
+            # Extract the package name (first line)
+            PACKAGE=$(grep "^package" $MAIN_ACTIVITY | head -n 1)
+            # Rewrite file with V2 Java structure
+            echo "$PACKAGE" > $MAIN_ACTIVITY
+            echo "import io.flutter.embedding.android.FlutterActivity;" >> $MAIN_ACTIVITY
+            echo "public class MainActivity extends FlutterActivity {" >> $MAIN_ACTIVITY
+            echo "}" >> $MAIN_ACTIVITY
+            
+          elif [[ $MAIN_ACTIVITY == *.kt ]]; then
+            # Extract the package name (first line)
+            PACKAGE=$(grep "^package" $MAIN_ACTIVITY | head -n 1)
+            # Rewrite file with V2 Kotlin structure
+            echo "$PACKAGE" > $MAIN_ACTIVITY
+            echo "import io.flutter.embedding.android.FlutterActivity" >> $MAIN_ACTIVITY
+            echo "class MainActivity: FlutterActivity() {" >> $MAIN_ACTIVITY
+            echo "}" >> $MAIN_ACTIVITY
+          fi
+
       - run: flutter pub get
       - run: flutter build apk --release
+      
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

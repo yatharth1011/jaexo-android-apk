@@ -5,8 +5,14 @@ import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
 import '../models/profile.dart';
 import '../utils/task_generator.dart';
+import 'sync_manager.dart';
 
 class ProfileManager extends ChangeNotifier {
+  SyncManager? _syncManager;
+
+  void setSyncManager(SyncManager syncManager) {
+    _syncManager = syncManager;
+  }
   Profile? _currentProfile;
   String _currentTheme = 'ghost';
   final Map<String, PausedTask> _pausedTasks = {};
@@ -51,6 +57,7 @@ class ProfileManager extends ChangeNotifier {
     );
 
     await _saveProfile();
+    _syncManager?.broadcastUpdate();
     notifyListeners();
   }
 
@@ -96,6 +103,7 @@ class ProfileManager extends ChangeNotifier {
     if (_currentProfile == null) return;
     _currentProfile!.tasks.add(task);
     await _saveProfile();
+    _syncManager?.broadcastUpdate();
     notifyListeners();
   }
 
@@ -113,6 +121,7 @@ class ProfileManager extends ChangeNotifier {
     if (_currentProfile == null) return;
     _currentProfile!.tasks.removeWhere((t) => t.id == taskId);
     await _saveProfile();
+    _syncManager?.broadcastUpdate();
     notifyListeners();
   }
 
@@ -127,6 +136,7 @@ class ProfileManager extends ChangeNotifier {
     final task = _currentProfile!.tasks.removeAt(index);
     _currentProfile!.tasks.insert(newIndex, task);
     await _saveProfile();
+    _syncManager?.broadcastUpdate();
     notifyListeners();
   }
 
@@ -134,6 +144,7 @@ class ProfileManager extends ChangeNotifier {
     if (_currentProfile == null) return;
     _currentProfile!.logs.add(log);
     await _saveProfile();
+    _syncManager?.broadcastUpdate();
     notifyListeners();
   }
 
@@ -202,6 +213,7 @@ class ProfileManager extends ChangeNotifier {
     _currentProfile!.tasks.removeWhere((t) => _formatDateKey(t.createdAt) == dateKey);
 
     await _saveProfile();
+    _syncManager?.broadcastUpdate();
     notifyListeners();
   }
 

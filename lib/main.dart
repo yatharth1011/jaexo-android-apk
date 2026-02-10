@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 
 import 'managers/profile_manager.dart';
@@ -15,10 +15,7 @@ import 'utils/theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Supabase.initialize(
-    url: const String.fromEnvironment('SUPABASE_URL', defaultValue: ''),
-    anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: ''),
-  );
+  // Supabase removed for local sync
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
@@ -37,11 +34,16 @@ class JaexoApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProfileManager()),
         ChangeNotifierProvider(create: (_) => NetworkManager()),
         ChangeNotifierProxyProvider<ProfileManager, SyncManager>(
-          create: (context) => SyncManager(
-            Provider.of<ProfileManager>(context, listen: false),
-          ),
-          update: (context, profileManager, syncManager) =>
-              syncManager!..updateProfile(profileManager),
+          create: (context) {
+            final pm = Provider.of<ProfileManager>(context, listen: false);
+            final sm = SyncManager(pm);
+            pm.setSyncManager(sm);
+            return sm;
+          },
+          update: (context, profileManager, syncManager) {
+            profileManager.setSyncManager(syncManager!);
+            return syncManager..updateProfile(profileManager);
+          },
         ),
         ChangeNotifierProvider(create: (_) => MusicManager()),
         ChangeNotifierProvider(create: (_) => BatteryManager()),

@@ -10,8 +10,9 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # Supabase for real-time sync
-  supabase_flutter: ^2.5.0
+  # Local Network Sync
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4
 
   # Network & Discovery
   wifi_info_flutter: ^2.0.0

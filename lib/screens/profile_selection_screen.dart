@@ -35,13 +35,13 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                 style: theme.textTheme.displayLarge?.copyWith(fontSize: 28),
               ),
               const SizedBox(height: 10),
-              Text(
-                'NETWORK: ${networkManager.currentSSID ?? "NOT CONNECTED"}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.secondary,
-                  fontSize: 12,
+                Text(
+                  'NETWORK: ${networkManager.currentSSID ?? "LOCAL MODE"}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.secondary,
+                    fontSize: 12,
+                  ),
                 ),
-              ),
               const SizedBox(height: 40),
               if (!_creatingNew) ...[
                 Text(
@@ -50,9 +50,7 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: networkManager.isConnected
-                      ? () => setState(() => _creatingNew = true)
-                      : null,
+                  onPressed: () => setState(() => _creatingNew = true),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     foregroundColor: theme.colorScheme.primary,
@@ -68,9 +66,9 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: 10),
                     child: Text(
-                      'Connect to Wi-Fi to continue',
+                      'Working in Local Mode (No Wi-Fi)',
                       style: TextStyle(
-                        color: theme.colorScheme.error,
+                        color: theme.colorScheme.secondary,
                         fontSize: 12,
                       ),
                     ),
@@ -161,8 +159,8 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
 
     await profileManager.createProfile(
       name: 'Default Profile',
-      networkSSID: networkManager.currentSSID!,
-      networkBSSID: networkManager.currentBSSID!,
+      networkSSID: networkManager.currentSSID ?? 'Local',
+      networkBSSID: networkManager.currentBSSID ?? 'Local',
       pattern: pattern,
     );
 

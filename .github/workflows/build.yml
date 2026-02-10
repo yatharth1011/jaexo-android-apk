@@ -11,40 +11,50 @@ jobs:
         with:
           flutter-version: '3.19.0'
           
-      - name: Auto-Migrate Android to V2
+      - name: Force Fix Android Embedding
         run: |
-          # --- 1. Fix AndroidManifest.xml ---
+          echo "Searching for MainActivity..."
+          # Find the file, supporting both Java and Kotlin
+          MAIN_FILE=$(find android -name "MainActivity.java" -o -name "MainActivity.kt" | head -n 1)
+          
+          if [ -z "$MAIN_FILE" ]; then
+            echo "ERROR: Could not find MainActivity!"
+            exit 1
+          fi
+          
+          echo "Found MainActivity at: $MAIN_FILE"
+          
+          # Extract the package name (e.g., package com.example.jaexo;)
+          PACKAGE_LINE=$(grep "^package" "$MAIN_FILE" | head -n 1)
+          echo "Detected Package: $PACKAGE_LINE"
+          
+          # REWRITE THE FILE
+          if [[ $MAIN_FILE == *".java" ]]; then
+            echo "Rewriting Java Activity..."
+            echo "$PACKAGE_LINE" > "$MAIN_FILE"
+            echo "" >> "$MAIN_FILE"
+            echo "import io.flutter.embedding.android.FlutterActivity;" >> "$MAIN_FILE"
+            echo "" >> "$MAIN_FILE"
+            echo "public class MainActivity extends FlutterActivity {" >> "$MAIN_FILE"
+            echo "}" >> "$MAIN_FILE"
+          else
+            echo "Rewriting Kotlin Activity..."
+            echo "$PACKAGE_LINE" > "$MAIN_FILE"
+            echo "" >> "$MAIN_FILE"
+            echo "import io.flutter.embedding.android.FlutterActivity" >> "$MAIN_FILE"
+            echo "" >> "$MAIN_FILE"
+            echo "class MainActivity: FlutterActivity() {" >> "$MAIN_FILE"
+            echo "}" >> "$MAIN_FILE"
+          fi
+          
+          # FIX MANIFEST
           MANIFEST="android/app/src/main/AndroidManifest.xml"
-          echo "Patching Manifest: $MANIFEST"
-          
-          # Remove the old V1 application name causing conflicts
+          echo "Patching Manifest..."
+          # Remove old V1 app name if present
           sed -i 's/android:name="io.flutter.app.FlutterApplication"//g' $MANIFEST
-          
-          # Inject the V2 meta-data required by plugins
-          sed -i 's/<\/application>/<meta-data android:name="flutterEmbedding" android:value="2" \/><\/application>/' $MANIFEST
-          
-          # --- 2. Fix MainActivity (Java or Kotlin) ---
-          # Find the main activity file automatically
-          MAIN_ACTIVITY=$(find android/app/src/main -name "MainActivity.*")
-          echo "Found MainActivity at: $MAIN_ACTIVITY"
-          
-          if [[ $MAIN_ACTIVITY == *.java ]]; then
-            # Extract the package name (first line)
-            PACKAGE=$(grep "^package" $MAIN_ACTIVITY | head -n 1)
-            # Rewrite file with V2 Java structure
-            echo "$PACKAGE" > $MAIN_ACTIVITY
-            echo "import io.flutter.embedding.android.FlutterActivity;" >> $MAIN_ACTIVITY
-            echo "public class MainActivity extends FlutterActivity {" >> $MAIN_ACTIVITY
-            echo "}" >> $MAIN_ACTIVITY
-            
-          elif [[ $MAIN_ACTIVITY == *.kt ]]; then
-            # Extract the package name (first line)
-            PACKAGE=$(grep "^package" $MAIN_ACTIVITY | head -n 1)
-            # Rewrite file with V2 Kotlin structure
-            echo "$PACKAGE" > $MAIN_ACTIVITY
-            echo "import io.flutter.embedding.android.FlutterActivity" >> $MAIN_ACTIVITY
-            echo "class MainActivity: FlutterActivity() {" >> $MAIN_ACTIVITY
-            echo "}" >> $MAIN_ACTIVITY
+          # Ensure V2 metadata exists
+          if ! grep -q "flutterEmbedding" $MANIFEST; then
+             sed -i 's/<\/application>/<meta-data android:name="flutterEmbedding" android:value="2" \/><\/application>/' $MANIFEST
           fi
 
       - run: flutter pub get

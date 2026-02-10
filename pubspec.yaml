@@ -1,0 +1,57 @@
+name: jaexo_ultimate
+description: JAEXO ULTIMATE - Multi-device synchronized study tracker
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Supabase for real-time sync
+  supabase_flutter: ^2.5.0
+
+  # Network & Discovery
+  wifi_info_flutter: ^2.0.0
+  network_info_plus: ^5.0.0
+  multicast_dns: ^0.3.2
+
+  # Device & System
+  device_info_plus: ^10.0.0
+  battery_plus: ^6.0.0
+  wakelock_plus: ^1.2.0
+  vibration: ^1.8.0
+  flutter_windowmanager: ^0.2.0
+
+  # Media Control
+  android_intent_plus: ^5.0.0
+  audio_service: ^0.18.12
+  flutter_media_metadata: ^1.0.0
+
+  # UI & Design
+  google_fonts: ^6.1.0
+  confetti: ^0.7.0
+
+  # State Management
+  provider: ^6.1.0
+  shared_preferences: ^2.2.0
+
+  # Utils
+  uuid: ^4.0.0
+  intl: ^0.19.0
+  http: ^1.1.0
+  path_provider: ^2.1.0
+  permission_handler: ^11.0.0
+  crypto: ^3.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/

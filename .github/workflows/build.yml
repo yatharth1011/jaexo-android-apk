@@ -1,0 +1,59 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: |
+          cd jaexo_flutter
+          flutter pub get
+
+      - name: Build APK
+        run: |
+          cd jaexo_flutter
+          flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: jaexo-ultimate-release
+          path: jaexo_flutter/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      - name: Create Release Info
+        run: |
+          cd jaexo_flutter
+          echo "# JAEXO ULTIMATE - Build Info" > build-info.txt
+          echo "Build Date: $(date)" >> build-info.txt
+          echo "Commit: ${{ github.sha }}" >> build-info.txt
+          echo "Branch: ${{ github.ref_name }}" >> build-info.txt
+
+      - name: Upload Build Info
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-info
+          path: jaexo_flutter/build-info.txt
